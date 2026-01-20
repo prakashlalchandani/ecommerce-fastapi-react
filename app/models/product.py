@@ -1,4 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float
+# app/models/product.py
+
+# 👇 ADD "ForeignKey" to this list
+from sqlalchemy import Column, Integer, String, Float, ForeignKey 
+from sqlalchemy.orm import relationship
 from database import Base
 
 class Product(Base):
@@ -9,3 +13,9 @@ class Product(Base):
     description = Column(String)
     price = Column(Float)
     stock = Column(Integer)
+    image_url = Column(String, nullable=True)
+    
+    # Now this will work because we imported it!
+    owner_id = Column(Integer, ForeignKey("users.id")) 
+    
+    owner = relationship("User")

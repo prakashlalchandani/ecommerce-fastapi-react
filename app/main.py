@@ -19,6 +19,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.get("/")
+def read_root():
+    return RedirectResponse(url="/docs")
+
 # Include routers
 app.include_router(users.router, tags=["users"])
 app.include_router(products.router, tags=["products"])

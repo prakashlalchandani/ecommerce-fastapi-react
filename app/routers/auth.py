@@ -33,7 +33,15 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     # But wait, in `oauth2.py` I wrote: `user = db.query(models.User).filter(models.User.email == username).first()`
     # So I should be consistent. If I use email in token (subject), I should login with email.
     
-    user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
+    # Support login with either Username or Email
+    # We check if the provided credential matches either the email or the username column
+    from sqlalchemy import or_
+    user = db.query(models.User).filter(
+        or_(
+            models.User.email == user_credentials.username,
+            models.User.username == user_credentials.username
+        )
+    ).first()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
@@ -44,4 +52,8 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     # Generate Token
     access_token = create_access_token(data={"sub": user.email})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "role": user.role
+    }

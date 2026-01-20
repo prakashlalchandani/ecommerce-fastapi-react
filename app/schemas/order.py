@@ -25,3 +25,15 @@ class OrderOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# 3. Seller Sales Tracker Schema
+from datetime import datetime
+class SellerSales(BaseModel):
+    id: int
+    buyer_name: str
+    product_name: str
+    quantity: int
+    date: datetime
+
+    class Config:
+        from_attributes = True

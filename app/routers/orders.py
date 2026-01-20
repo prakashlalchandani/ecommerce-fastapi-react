@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.order import Order, OrderItem
 from models.product import Product
+from models.user import User
 from schemas.order import OrderCreate, OrderOut as OrderSchema
 from typing import List
 import oauth2
@@ -60,3 +61,31 @@ def get_my_orders(
     orders = db.query(Order).filter(Order.user_id == current_user.id).all()
     
     return orders
+
+from schemas.order import SellerSales
+
+# GET /seller/orders
+@router.get("/seller/orders", response_model=List[SellerSales])
+def get_seller_sales(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    if current_user.role != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can view sales")
+
+    # query OrderItems where product.owner_id == current_user.id
+    # We need to join OrderItem -> Product, and OrderItem -> Order -> User (to get buyer name)
+    
+    results = db.query(
+        OrderItem.id,
+        Product.name.label("product_name"),
+        OrderItem.quantity,
+        Order.date,
+        User.username.label("buyer_name")
+    ).join(Product, OrderItem.product_id == Product.id)\
+     .join(Order, OrderItem.order_id == Order.id)\
+     .join(User, Order.user_id == User.id)\
+     .filter(Product.owner_id == current_user.id)\
+     .all()
+
+    return results
